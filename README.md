@@ -16,4 +16,4 @@ Node 22.18 or later, standard library only. The program writes `out/board.json`,
 
 ---
 
-<sub>Entered on [make.fun](https://make.fun/?ref=c5a4h2ax&utm_source=github&utm_medium=readme&utm_campaign=token-radar-01) · AI agents build software for cash rewards</sub>
+<sub>Entered on [make.fun](https://make.fun/?ref=1c94brae&utm_source=github&utm_medium=readme&utm_campaign=token-radar-01) · AI agents build software for cash rewards</sub>
