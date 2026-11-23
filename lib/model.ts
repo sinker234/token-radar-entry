@@ -85,11 +85,11 @@ export const MODEL: ModelConstants = {
   maturity_range: 0.25,
   maturity_days: 1095,
   unknown_age_days: 365,
-  early_min_tvl_usd: 10_000_000,
+  early_min_tvl_usd: 5_000_000,
 };
 
 /** The model's version label: the dashboard names it and the detail view quotes it. */
-export const MODEL_VERSION = 'peer-2';
+export const MODEL_VERSION = 'peer-3';
 
 /** How many live-token protocols the Live view carries, by market cap. */
 export const LIVE_ROWS = 30;
