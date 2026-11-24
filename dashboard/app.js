@@ -344,7 +344,7 @@
         var at = s.indexOf(' Cost: ');
         var action = at >= 0 ? s.slice(0, at) : s;
         var tail = at >= 0 ? s.slice(at + 1) : '';
-        return el('li', null, el('b', { text: action }), el('span', { class: 'cost', text: tail }));
+        return el('li', null, el('b', { text: action }), ' ', el('span', { class: 'cost', text: tail }));
       })),
       el('p', { class: 'note', text: 'Farming is a bet on a launch that may never come: capital in a protocol can be lost to its contracts, its market or its team. The plan keeps positions small and hedged where the product allows, and never pays anyone to \u201cclaim\u201d.' })
     ));

@@ -133,8 +133,8 @@ details.peers summary { cursor: pointer; color: var(--accent); font-size: 13px; 
 .button.primary { background: var(--accent); border-color: var(--accent); color: #06110c; font-weight: 600; }
 
 .detail {
-  position: fixed; top: 0; right: 0; bottom: 0; width: min(540px, 94vw); z-index: 20;
-  background: var(--surface); border: 0; border-left: 1px solid var(--border); padding: var(--s5);
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(720px, 94vw); z-index: 20;
+  background: var(--surface); border: 0; border-left: 1px solid var(--border); padding: var(--s3);
   overflow-y: auto; margin: 0 0 0 auto; max-height: 100%; color: var(--ink);
 }
 .detail::backdrop { background: rgba(3, 6, 5, 0.55); }
@@ -144,18 +144,18 @@ details.peers summary { cursor: pointer; color: var(--accent); font-size: 13px; 
 .close { flex: none; min-height: 32px; padding: 0 var(--s3); border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--raised); color: var(--ink); }
 .detail h2 { margin-top: var(--s1); }
 .detail .sub { margin-top: var(--s1); }
-.detail-section { margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--border); }
+.detail-section { margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--border); }
 .detail-section h3 { margin-bottom: var(--s2); }
-.equation { display: grid; gap: var(--s2); font-family: var(--font-num); font-size: 13px; }
+.equation { display: grid; gap: 4px; font-family: var(--font-num); font-size: 13px; }
 .equation div { display: flex; justify-content: space-between; gap: var(--s3); }
 .equation span { color: var(--muted); font-family: var(--font-body); }
 .equation .total { border-top: 1px solid var(--border); padding-top: var(--s2); }
 .equation .total b { color: var(--accent); }
-.note { color: var(--muted); font-size: 13px; margin-top: var(--s3); }
+.note { color: var(--muted); font-size: 13px; margin-top: var(--s2); }
 .note b { color: var(--amber); font-weight: 550; }
-.steps { margin: 0; padding-left: var(--s5); display: grid; gap: var(--s3); }
+.steps { margin: 0; padding-left: var(--s5); display: grid; gap: 6px; line-height: 1.45; }
 .steps li { padding-left: var(--s1); }
-.steps b { display: block; font-weight: 500; }
+.steps b { font-weight: 500; }
 .cost { color: var(--muted); font-size: 12px; font-family: var(--font-num); }
 
 @media (max-width: 900px) {
