@@ -94,7 +94,7 @@
       else if (key === 'tvl') { av = a.tvl_usd; bv = b.tvl_usd; }
       else if (key === 'growth') { av = a.change_7d === null ? -Infinity : a.change_7d; bv = b.change_7d === null ? -Infinity : b.change_7d; }
       else if (key === 'age') { av = a.age_days === null ? Infinity : a.age_days; bv = b.age_days === null ? Infinity : b.age_days; }
-      else if (key === 'mult') { av = a.peer_multiple; bv = b.peer_multiple; }
+      else if (key === 'mult') { av = a.implied_value_usd / a.tvl_usd; bv = b.implied_value_usd / b.tvl_usd; }
       else { av = a.implied_value_usd; bv = b.implied_value_usd; }
       if (av < bv) return -state.dir;
       if (av > bv) return state.dir;
@@ -116,11 +116,11 @@
   function lede() {
     return el('section', { class: 'lede' },
       el('div', null,
-        el('h1', { text: 'Pre-token protocols, priced by the peers that already trade' }),
+        el('h1', { text: 'Pre-token protocols, priced by a value model fitted on the peers that already trade' }),
         el('p', null,
-          'Every protocol below records no token in the snapshot. The radar prices each one from the market-cap-to-TVL ratios of the ',
+          'Every protocol below records no token in the snapshot. The radar prices each one with value terms fitted by Huber regression on the ',
           el('b', { text: DATA.peer_size + ' live-token protocols' }),
-          ' in the same snapshot, adjusted for its own TVL growth, age and chain spread. ',
+          ' in the same snapshot — its TVL, its age with no token, its chain spread and its category — adjusted for its own TVL growth. ',
           el('b', { text: 'An implied value is this board\u2019s model, not a prediction' }),
           ' that a token will be issued, or when: it answers what a launch would be worth at today\u2019s record, and the detail view for each row carries the steps to farm it meanwhile.'
         )
@@ -128,7 +128,7 @@
       el('div', { class: 'facts' },
         el('div', { class: 'fact' }, el('span', { text: 'Watchlist covered' }), el('b', { text: DATA.watchlist_size + ' / ' + DATA.watchlist_size })),
         el('div', { class: 'fact' }, el('span', { text: 'Protocols ranked' }), el('b', { text: String(DATA.board_size) })),
-        el('div', { class: 'fact' }, el('span', { text: 'Early rows below the $50M floor' }), el('b', { text: String(DATA.early_size) })),
+        el('div', { class: 'fact' }, el('span', { text: 'Early rows beyond the watchlist' }), el('b', { text: String(DATA.early_size) })),
         el('div', { class: 'fact' }, el('span', { text: 'Live peers priced from' }), el('b', { text: String(DATA.peer_size) })),
         el('div', { class: 'fact' }, el('span', { text: 'Universe median cap / TVL' }), el('b', { text: fmtRatio(DATA.global_multiple) }))
       )
@@ -202,7 +202,7 @@
         el('td', { class: 'num', text: fmtUsd(r.tvl_usd) }),
         el('td', { class: 'num ' + growthClass, text: fmtPct(r.change_7d) }),
         el('td', { class: 'num', text: fmtAge(r.age_days) }),
-        el('td', { class: 'num', text: fmtMult(r.peer_multiple) }),
+        el('td', { class: 'num', text: fmtMult(r.implied_value_usd / r.tvl_usd) }),
         el('td', null, el('div', { class: 'implied' },
           el('div', { class: 'bar', 'aria-hidden': 'true' }, el('i', { style: 'width:' + Math.max(3, Math.round((r.implied_value_usd / max) * 100)) + '%' })),
           el('span', { class: 'num', text: fmtUsd(r.implied_value_usd) })
@@ -224,7 +224,7 @@
             sortHeader('tvl', 'TVL'),
             sortHeader('growth', '7d'),
             sortHeader('age', 'Age'),
-            sortHeader('mult', 'Peer x'),
+            sortHeader('mult', 'Implied x'),
             sortHeader('implied', 'Implied value'),
             el('th', { scope: 'col', text: 'Peer range' }),
             el('th', { scope: 'col', text: 'List' })
@@ -272,7 +272,8 @@
 
   function methodPanel() {
     var m = DATA.model;
-    var peerRows = DATA.peers.slice(0, 14).map(function (p) {
+    var v = DATA.validation;
+    var peerRows = DATA.peers.map(function (p) {
       return el('tr', null,
         el('td', { text: p.category }),
         el('td', { class: 'num', text: String(p.peers) }),
@@ -289,19 +290,40 @@
       )),
       el('tbody', null, peerRows)
     );
-    var details = el('details', { class: 'peers' }, el('summary', { text: 'The peer table the model prices from' }), table);
+    var details = el('details', { class: 'peers' }, el('summary', { text: 'The peer table behind the range (' + DATA.peers.length + ' categories)' }), table);
+    var validRows = [
+      ['Leave-one-out, 128 live rows', v.loo_factor.toFixed(2) + 'x', v.peer_loo_factor.toFixed(2) + 'x'],
+      ['Walk-forward, listed after 2025-05-14 (' + v.wf1_n + ' rows)', v.wf1_factor.toFixed(2) + 'x', v.peer_wf1_factor.toFixed(2) + 'x'],
+      ['Walk-forward, listed after 2025-11-14 (' + v.wf2_n + ' rows)', v.wf2_factor.toFixed(2) + 'x', v.peer_wf2_factor.toFixed(2) + 'x']
+    ].map(function (row) {
+      return el('tr', null,
+        el('td', { text: row[0] }),
+        el('td', { class: 'num', text: row[1] }),
+        el('td', { class: 'num', text: row[2] })
+      );
+    });
+    var validTable = el('table', { class: 'peer-table' },
+      el('thead', null, el('tr', null,
+        el('th', { scope: 'col', text: 'Held-out check (median error factor)' }),
+        el('th', { scope: 'col', text: 'Fitted terms' }),
+        el('th', { scope: 'col', text: 'Peer-median model' })
+      )),
+      el('tbody', null, validRows)
+    );
+    var validDetails = el('details', { class: 'peers' }, el('summary', { text: 'Held-out validation: the fitted terms tested twice before use' }), validTable);
     return el('section', { class: 'panel method' },
       el('h2', { text: 'How the implied value is derived' }),
-      el('div', { class: 'formula', text: 'implied = tvl_usd x peer_multiple(category) x momentum(change_7d) x maturity(age) x breadth(chains)' }),
+      el('div', { class: 'formula', text: 'implied = exp(7.07 + 0.5416 x log(TVL) - 0.0751 x log(age+30) + 0.0605 x log(chains) + category effect) x momentum(change_7d)' }),
       el('ul', null,
-        el('li', null, el('b', { text: 'Peer multiple. ' }), 'The median market-cap-to-TVL ratio of the category\u2019s live-token protocols in this snapshot, shrunk toward the universe median of ' + fmtRatio(DATA.global_multiple) + ' with weight ' + m.shrink_k + ', then clamped to [' + m.multiple_floor + ', ' + m.multiple_cap + ']. A category with fewer than ' + m.min_category_peers + ' live peers is priced at the universe\u2019s own stats: one observation is not a market. The range on each row repeats the arithmetic with the first and third quartile ratios of the same peer set. Wrapped, staked and bridged pass-through products (WBTC is the standing example) are not ranked at all: their TVL is a claim on a token that already trades, and the snapshot carries no parent field to tell them from an independent protocol.'),
+        el('li', null, el('b', { text: 'Fitted value terms. ' }), 'A log-log regression fitted by Huber IRLS on the snapshot\u2019s 128 live-token protocols, the only rows whose market cap is known: log(market cap) on log(TVL), log(age + 30 days) and log(chain count), plus a category effect. The category effect is the category\u2019s mean residual, shrunk n/(n+4), and it is applied only when the category has at least ' + m.min_category_peers + ' live peers: one observation is not a market — the Prediction Market effect from a single live row (Rain, cap/TVL 400x) is not used. Seven-day growth is deliberately not a fitted term: the fitted growth coefficient came out negative, which contradicts the model\u2019s stated logic, so growth is handled by the momentum multiplier below instead.'),
         el('li', null, el('b', { text: 'Momentum. ' }), '1 + clamp(change_7d, ' + m.momentum_floor + ', ' + m.momentum_cap + ') / 100 x ' + m.momentum_weight + '. A protocol whose TVL is growing is priced above the same TVL standing still; an unreported change counts as zero, never as growth.'),
-        el('li', null, el('b', { text: 'Maturity. ' }), m.maturity_base + ' + ' + m.maturity_range + ' x min(age_days, ' + m.maturity_days + ') / ' + m.maturity_days + '. Years run with no token are a record a launch can be priced on; an unknown listing date counts as ' + m.unknown_age_days + ' days.'),
-        el('li', null, el('b', { text: 'Breadth. ' }), 'x1.06 on four or more chains, x1.04 on three, x1.02 on two: more chains are more places a token can be distributed and used.')
+        el('li', null, el('b', { text: 'Range. ' }), 'The low and high ends repeat the same arithmetic at the peer set\u2019s first and third quartile cap/TVL ratios relative to its median (the universe\u2019s own stats when a category has under ' + m.min_category_peers + ' live peers): the range is the spread real peers actually trade at. Wrapped, staked and bridged pass-through products (WBTC is the standing example) are not ranked at all: their TVL is a claim on a token that already trades, and the snapshot carries no parent field to tell them from an independent protocol.'),
+        el('li', null, el('b', { text: 'Versioned names. ' }), 'A name ending in a version is excluded only when its base protocol is also in the snapshot: a versioned protocol with no unversioned record is that protocol\u2019s only record and is ranked. Five versioned records are excluded on verified evidence that the token already exists (Aera V3/V2, Bucket Protocol V2, PotatoSwap V2, and BDEX V3 on thin evidence, excluded on the cautious side).')
       ),
-      el('p', null, 'No protocol\u2019s name is an input to the model: the same function scores every row, and each row\u2019s detail view shows its own factors. ',
+      el('p', null, 'Held out, the fitted terms beat the peer-median model they replace on every check: leave-one-out over the 128 live rows (median error factor ' + v.loo_factor.toFixed(2) + 'x vs ' + v.peer_loo_factor.toFixed(2) + 'x; ' + Math.round(v.loo_within3x * 100) + '% of predictions within 3x) and two walk-forward splits by listing date. Rank correlation on held-out listings is near zero for every model tried, so the board makes no claim to predict listing order — it prices each record on its own figures. ',
         el('b', { text: 'Honesty note: ' }),
         'the snapshot says a protocol records no token; it cannot prove none exists off DefiLlama\u2019s record. Implied value is this entry\u2019s claim about a hypothetical launch at today\u2019s scale, not a forecast, and the farm plans name no campaign the snapshot does not record.'),
+      validDetails,
       details
     );
   }
@@ -327,16 +349,16 @@
       el('h3', { text: 'The model on this protocol' }),
       el('div', { class: 'equation' },
         el('div', null, el('span', { text: 'TVL' }), el('b', { text: fmtUsd(row.tvl_usd) })),
-        el('div', null, el('span', { text: row.peer_scope === 'universe' ? 'Peer multiple (universe median; ' + (row.category || 'this category') + ' has under 3 live peers)' : 'Peer multiple (' + row.peer_count + ' live ' + row.peer_scope + ' peers)' }), el('b', { text: fmtMult(row.peer_multiple) })),
+        el('div', null, el('span', { text: 'Fitted value (before momentum)' }), el('b', { text: fmtUsd(row.fitted_value_usd) })),
+        el('div', null, el('span', { text: row.peer_scope === 'universe' ? 'Category effect (' + (row.category || 'this category') + ' has under 3 live peers; fitted global line)' : 'Category effect (' + row.category_peers + ' live ' + row.peer_scope + ' peers)' }), el('b', { text: (row.category_effect >= 0 ? '+' : '') + row.category_effect.toFixed(2) + ' log pts' })),
         el('div', null, el('span', { text: 'Seven-day change' }), el('b', { text: fmtPct(row.change_7d) })),
         el('div', null, el('span', { text: 'Momentum multiplier' }), el('b', { text: fmtMult(row.momentum_multiplier) })),
         el('div', null, el('span', { text: 'Age with no token' }), el('b', { text: fmtAge(row.age_days) })),
-        el('div', null, el('span', { text: 'Maturity multiplier' }), el('b', { text: fmtMult(row.maturity_multiplier) })),
-        el('div', null, el('span', { text: 'Chains' }), el('b', { text: (row.chains ? row.chains.length : 0) + ' \u00b7 ' + fmtMult(row.breadth_multiplier) })),
+        el('div', null, el('span', { text: 'Chains' }), el('b', { text: String(row.chains ? row.chains.length : 0) })),
         el('div', { class: 'total' }, el('span', { text: 'Implied value' }), el('b', { text: fmtUsd(row.implied_value_usd) })),
-        el('div', null, el('span', { text: 'Peer range' }), el('b', { text: fmtUsd(row.implied_low_usd) + ' \u2013 ' + fmtUsd(row.implied_high_usd) }))
+        el('div', null, el('span', { text: 'Peer range (x' + row.peer_spread_low.toFixed(2) + ' \u2013 x' + row.peer_spread_high.toFixed(2) + ' of the fitted value)' }), el('b', { text: fmtUsd(row.implied_low_usd) + ' \u2013 ' + fmtUsd(row.implied_high_usd) }))
       ),
-      el('p', { class: 'note', text: 'Model ' + DATA.model_version + ': one function scores every protocol; nothing about this name is special-cased. The range is what the same arithmetic gives at the quartile ratios of the peer set behind this row, so it is wide exactly where real peers disagree.' })
+      el('p', { class: 'note', text: 'Model ' + DATA.model_version + ': one fitted function scores every protocol; nothing about this name is special-cased. The range is what the same arithmetic gives at the quartile ratios of the peer set behind this row, so it is wide exactly where real peers disagree.' })
     ));
     dialog.appendChild(el('section', { class: 'detail-section' },
       el('h3', { text: 'Farm plan' }),

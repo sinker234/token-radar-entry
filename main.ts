@@ -1,7 +1,7 @@
 // Token Launch Radar: the entry program (Node 22, standard library only).
 //
 // It reads the sealed snapshot from /input/snapshot.json (or --input <file|dir>), scores every
-// protocol the board may rank with the peer-multiple model in lib/model.ts, writes the ranked
+// protocol the board may rank with the fitted value terms in lib/model.ts, writes the ranked
 // board to /output/board.json, writes the dashboard's data to /output/data.js, copies this
 // repository's dashboard/ and screenshots/ into /output, and finishes with /output/dossier.json,
 // built by the vendored make.fun library exactly as the scorer rebuilds it.
