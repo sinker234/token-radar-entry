@@ -1,4 +1,4 @@
-"""Render the built dashboard locally and take the entry's three screenshots."""
+"""Render the built dashboard locally and take the entry's four screenshots."""
 import os
 import subprocess
 import sys
@@ -22,6 +22,7 @@ try:
         ("1-board.png", base),
         ("2-detail.png", base + "#p=steakhouse-financial"),
         ("3-filtered.png", base + "#category=Lending"),
+        ("4-coverage.png", base + "#view=coverage"),
     ]
     with Camoufox(headless=True, canvas_noise=False, i_know_what_im_doing=True) as browser:
         for name, url in views:

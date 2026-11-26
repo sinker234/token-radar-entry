@@ -86,6 +86,7 @@ button { cursor: pointer; }
 .count { margin-left: auto; color: var(--muted); font-size: 13px; align-self: center; font-family: var(--font-num); }
 
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-panel); overflow: hidden; }
+.panel > p.sub { padding: var(--s3) var(--s3) 0; margin: 0; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 caption { text-align: left; padding: var(--s3) var(--s3) 0; }
@@ -146,7 +147,7 @@ details.peers summary { cursor: pointer; color: var(--accent); font-size: 13px; 
 .detail .sub { margin-top: var(--s1); }
 .detail-section { margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--border); }
 .detail-section h3 { margin-bottom: var(--s2); }
-.equation { display: grid; gap: 4px; font-family: var(--font-num); font-size: 13px; }
+.equation { display: grid; gap: 2px; font-family: var(--font-num); font-size: 13px; }
 .equation div { display: flex; justify-content: space-between; gap: var(--s3); }
 .equation span { color: var(--muted); font-family: var(--font-body); }
 .equation .total { border-top: 1px solid var(--border); padding-top: var(--s2); }
